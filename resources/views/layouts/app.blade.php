@@ -47,6 +47,10 @@
 
     @include('partials.footer')
 
+    @if (config('assistant.enabled', true))
+        <livewire:assistant.chat-widget />
+    @endif
+
     @livewireScripts
 </body>
 </html>

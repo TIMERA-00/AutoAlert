@@ -17,7 +17,7 @@ class ListingNormalizer
             return null;
         }
 
-        $cleaned = preg_replace('/[\u{00a0}\u{202f}]/u', ' ', $raw) ?? $raw;
+        $cleaned = preg_replace('/[\x{a0}\x{202f}]/u', ' ', $raw) ?? $raw;
         $cleaned = preg_replace('/(f\s?cfa|xof|francs?|eur|euros?|usd|\$)/iu', '', $cleaned) ?? $cleaned;
 
         if (! preg_match('/([0-9][0-9\s.,]*)/u', $cleaned, $m)) {

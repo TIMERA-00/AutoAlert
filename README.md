@@ -13,6 +13,8 @@ publiees sur plusieurs sources et le prevenit des qu'un vehicule correspond.
 - **Alertes** : criteres enregistres, frequence (immediat / quotidien /
   hebdomadaire), apercu du nombre de correspondances.
 - **Notifications** multicanal (email, WhatsApp, in-app) avec badge et historique.
+- **Assistant flottant** : recherche guidee en langage naturel, dicttee vocale,
+  reconnaissance de vehicule par photo et conversion d'une recherche en alerte.
 - **Espace admin** : CRUD vehicules, import d'annonces depuis une URL, gestion
   des sources, des utilisateurs, surveillance des alertes, journal des
   notifications et statistiques.
@@ -70,9 +72,34 @@ defaut : l'application fonctionne sans elles, avec des degrades explicites.
 | `CLOUDINARY_*` | Stockage et redimensionnement des images ; disque `public` sinon |
 | `WHATSAPP_PHONE_NUMBER_ID` / `WHATSAPP_ACCESS_TOKEN` | Envoi WhatsApp via l'API Cloud |
 | `IMPORT_ENABLED` / `IMPORT_ALLOWED_HOSTS` | Import automatique depuis une URL tierce |
+| `ASSISTANT_ENABLED` / `ASSISTANT_DRIVER` | Activation et choix du moteur de l'assistant |
+| `OPENAI_API_KEY` / `OPENAI_API_BASE` | Moteur conversationnel et reconnaissance photo |
+| `ASSISTANT_MAX_PHOTO_MB` | Taille maximale d'une photo envoyee au chatbox |
 
 L'import automatique est volontairement restreint : liste blanche d'hotes,
 limite de taille de charge utile, respect de `robots.txt` et delai d'attente.
+
+## Assistant
+
+Le chatbox est present sur toutes les pages publiques. Il comprehend une phrase
+courante — « un SUV automatique sous 15 millions a Dakar », « entre 5 et
+10 millions », « un Toyota a partir de 2019 » — et repond avec de vrais vehicules
+issus du catalogue, jamais avec une liste inventee.
+
+Deux moteurs, un seul chemin de recherche (`VehicleSearchTool`) :
+
+| `ASSISTANT_DRIVER` | Comportement |
+|---|---|
+| `rules` (defaut sans cle) | Analyse l'intention et interroge le catalogue en local, sans reseau. C'est ce qui rend le widget demonstrable sur un clone neuf et testable en CI. |
+| `openai` | Passe par l'API OpenAI-compatible, avec `search_vehicles` et `propose_alert` comme outils. En cas d'erreur ou de quota, repli automatique sur le moteur `rules`. |
+
+La reconnaissance de photo exige `OPENAI_API_KEY` et `ASSISTANT_VISION_MODEL`.
+Sans cle, l'assistant dit explicitement qu'il ne peut pas identifier le modele
+et demande la marque plutot que de deviner.
+
+Conversations, criteres et photos sont conserves ; une conversation de visiteur
+est rattachee au compte a la connexion. Une proposition de recherche peut etre
+transformee en alerte enregistree en un clic.
 
 ## Taches planifiees
 

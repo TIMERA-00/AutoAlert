@@ -125,8 +125,14 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Idempotent: `db:seed` must stay runnable on a populated database.
         foreach (range(1, 6) as $i) {
-            User::factory()->create(['email' => "client{$i}@example.com"]);
+            User::firstOrCreate(
+                ['email' => "client{$i}@example.com"],
+                User::factory()->raw(['email' => "client{$i}@example.com"]) + [
+                    'password' => Hash::make('Password@2024'),
+                ]
+            );
         }
 
         $this->command?->info('  '.User::count().' utilisateurs.');
@@ -167,13 +173,20 @@ class DatabaseSeeder extends Seeder
         $this->command?->info('  '.Alert::count().' alertes.');
 
         // ---------------------------------------------------------- favoris
-        Vehicle::where('brand', 'Toyota')->limit(1)->get()
-            ->concat(Vehicle::where('brand', 'Hyundai')->limit(1)->get())
-            ->each(fn (Vehicle $vehicle) => $mamadou->favorites()->create(['vehicle_id' => $vehicle->id]));
+        $favoris = Vehicle::where('brand', 'Toyota')->limit(1)->get()
+            ->concat(Vehicle::where('brand', 'Hyundai')->limit(1)->get());
 
-        Vehicle::where('brand', 'Toyota')->limit(1)->get()->each(
-            fn (Vehicle $vehicle) => $vehicle->increment('favorite_count')
+        $favoris->each(
+            fn (Vehicle $vehicle) => $mamadou->favorites()->firstOrCreate(['vehicle_id' => $vehicle->id])
         );
+
+        // Recomputed from the table rather than incremented, so re-seeding
+        // cannot inflate the counter.
+        Vehicle::query()->each(function (Vehicle $vehicle): void {
+            $vehicle->forceFill([
+                'favorite_count' => $vehicle->favorites()->count(),
+            ])->save();
+        });
 
         $this->command?->info('  Base initialisee.');
         $this->command?->newLine();

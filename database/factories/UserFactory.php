@@ -29,7 +29,7 @@ class UserFactory extends Factory
         return [
             'first_name' => $first,
             'last_name' => $last,
-            'email' => Str::lower($first.'.'.$last.$this->faker->numberBetween(1, 9999)).'@example.com',
+            'email' => $this->uniqueEmail($first, $last),
             'phone' => '+221 7'.$this->faker->numerify('#######'),
             'email_verified_at' => now(),
             'password' => static::$password ??= bcrypt('Password@2024'),
@@ -46,6 +46,21 @@ class UserFactory extends Factory
     public function admin(): static
     {
         return $this->state(fn () => ['role' => UserRole::Admin]);
+    }
+
+    /**
+     * French names carry accents and spaces ("Étienne Le Gall"), which make an
+     * invalid address the mailer then refuses. Transliterate first.
+     */
+    private function uniqueEmail(string $first, string $last): string
+    {
+        $local = Str::of(Str::ascii($first.' '.$last))
+            ->lower()
+            ->replaceMatches('/[^a-z0-9]+/', '.')
+            ->trim('.')
+            ->toString();
+
+        return sprintf('%s%d@example.com', $local !== '' ? $local : 'user', $this->faker->numberBetween(1, 9999));
     }
 
     public function unverified(): static

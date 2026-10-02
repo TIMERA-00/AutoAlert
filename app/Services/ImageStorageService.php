@@ -53,7 +53,7 @@ class ImageStorageService
             return $this->storeOnCloudinary($file, $folder);
         }
 
-        return $this->storeLocally($file);
+        return $this->storeLocally($file, $folder);
     }
 
     /**
@@ -85,13 +85,16 @@ class ImageStorageService
     /**
      * @return array{url: string, public_id: ?string, provider: string}
      */
-    private function storeLocally(UploadedFile $file): array
+    private function storeLocally(UploadedFile $file, string $folder): array
     {
         $name = Str::uuid()->toString().'.'.($file->getClientOriginalExtension() ?: 'jpg');
-        $path = $file->storeAs('vehicles', $name, 'public');
+        $path = $file->storeAs($folder, $name, 'public');
 
         return [
             'url' => Storage::disk('public')->url($path),
+            // Callers that must read the bytes back (the vision model) need the
+            // disk path, not the public URL.
+            'path' => $path,
             'public_id' => $path,
             'provider' => 'local',
         ];

@@ -1,0 +1,103 @@
+name: autoalert
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: autoalert/app:latest
+    restart: unless-stopped
+    ports:
+      - '${APP_PORT:-8000}:8000'
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-http://localhost:8000}
+      DB_CONNECTION: pgsql
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-autoalert}
+      DB_USERNAME: ${DB_USERNAME:-autoalert}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+    volumes:
+      - storage:/app/storage
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    image: autoalert/app:latest
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      DB_CONNECTION: pgsql
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-autoalert}
+      DB_USERNAME: ${DB_USERNAME:-autoalert}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+    volumes:
+      - storage:/app/storage
+    depends_on:
+      - app
+      - redis
+
+  scheduler:
+    image: autoalert/app:latest
+    restart: unless-stopped
+    command: php artisan schedule:work
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      DB_CONNECTION: pgsql
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-autoalert}
+      DB_USERNAME: ${DB_USERNAME:-autoalert}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      REDIS_HOST: redis
+    volumes:
+      - storage:/app/storage
+    depends_on:
+      - app
+      - redis
+
+  database:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-autoalert}
+      POSTGRES_USER: ${DB_USERNAME:-autoalert}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME:-autoalert} -d ${DB_DATABASE:-autoalert}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  storage:
+  database:
+  redis:

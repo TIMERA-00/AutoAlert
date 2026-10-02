@@ -1,0 +1,28 @@
+# Dependencies and build artefacts are rebuilt inside the image.
+node_modules
+vendor
+public/build
+public/hot
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+bootstrap/cache/*.php
+
+# Local environment and database
+.env
+.env.backup
+.env.*.local
+/database/*.sqlite
+/database/*.sqlite-*
+
+# Tooling caches
+.phpunit.result.cache
+.phpunit.cache
+.git
+.github
+.gitignore
+*.md
+!README.md
+Dockerfile
+docker-compose.yml

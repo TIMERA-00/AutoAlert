@@ -294,6 +294,30 @@ class AssistantTest extends TestCase
         $this->assertSame(ChatConversation::STATUS_RESOLVED, ChatConversation::find($first)->status);
     }
 
+    public function test_a_deep_link_answers_immediately_instead_of_only_prefilling(): void
+    {
+        Vehicle::factory()->published()->create(['brand' => 'Toyota', 'model' => 'RAV4', 'price' => 12_000_000]);
+
+        $this->get('/?assistant=1&ask=un+Toyota+sous+15+millions')
+            ->assertOk()
+            ->assertSee('RAV4', false);
+
+        $this->assertDatabaseHas('chat_messages', [
+            'role' => ChatRole::User,
+            'content' => 'un Toyota sous 15 millions',
+        ]);
+    }
+
+    public function test_the_composer_is_complete_without_a_photo_selected(): void
+    {
+        // A stray Blade conditional once swallowed the microphone button: it
+        // rendered only once a photo had been picked.
+        $this->widget()
+            ->assertSee('Parler', false)
+            ->assertSee('Envoyer une photo', false)
+            ->assertSee('Envoyer', false);
+    }
+
     public function test_empty_messages_are_not_sent(): void
     {
         $this->widget()->call('send');

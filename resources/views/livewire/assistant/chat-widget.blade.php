@@ -4,15 +4,7 @@
 
 <div
     class="pointer-events-none fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6"
-    x-data="assistantWidget({
-        open: @js($this->isOpen()),
-        listening: false,
-        supported: assistantWidget.supportsRecognition(),
-        voiceReply: false,
-        speech: '',
-        interim: '',
-        target: 'assistant-text',
-    })"
+    x-data="assistantWidget({ open: @js($this->isOpen()) })"
     @assistant-updated.window="$nextTick(() => scrollToBottom())"
     x-on:keydown.escape.window="open = false"
 >
@@ -284,7 +276,7 @@
                         Retirer
                     </button>
                 </div>
-
+            @endif
 
             <form
                 wire:submit="send"
@@ -298,12 +290,11 @@
                         wire:model="message"
                         rows="1"
                         x-model="speech"
-                        x-on:input="speech = $event.target.value; autoGrow($event.target)"
+                        x-on:input="autoGrow($event.target)"
                         x-on:keydown.enter.prevent="if (! shiftKey) $refs.form.requestSubmit()"
                         placeholder="Ecrivez ou parlez..."
                         class="input max-h-32 min-h-[2.5rem] w-full resize-none py-2.5 pr-10 text-sm"
                         x-bind:placeholder="listening ? 'Je vous ecoute...' : 'Ecrivez ou parlez...'"
-                        x-bind:disabled="listening"
                     ></textarea>
                 </div>
 
@@ -315,16 +306,15 @@
                     x-cloak
                     x-on:click="toggleListening()"
                     x-bind:class="listening ? 'bg-red-500 text-white' : 'text-ink-500 hover:bg-ink-100'"
-                        class="grid h-10 w-10 shrink-0 place-items-center rounded-xl transition"
-                        x-bind:aria-pressed="listening"
-                        title="Parler"
-                        aria-label="Parler"
-                    >
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V5.25a3 3 0 0 1 6 0v7.5a3 3 0 0 1-3 3Z"/>
-                        </svg>
-                    </button>
-                @endif
+                    class="grid h-10 w-10 shrink-0 place-items-center rounded-xl transition"
+                    x-bind:aria-pressed="listening"
+                    title="Parler"
+                    aria-label="Parler"
+                >
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V5.25a3 3 0 0 1 6 0v7.5a3 3 0 0 1-3 3Z"/>
+                    </svg>
+                </button>
 
                 <label
                     class="grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-xl text-ink-500 transition hover:bg-ink-100"

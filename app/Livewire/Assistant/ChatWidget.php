@@ -50,10 +50,13 @@ class ChatWidget extends Component
     {
         $this->conversationId = app(AssistantService::class)->conversation(auth()->user())->id;
 
+        // A deep link such as /?ask=un+Toyota+sous+15+millions is a search in
+        // itself: the visitor expects an answer, not a prefilled box.
         if ($this->prefill !== '') {
             $this->message = $this->prefill;
             $this->prefill = '';
             $this->open = '1';
+            $this->send();
         }
     }
 

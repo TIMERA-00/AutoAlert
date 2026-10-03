@@ -12,11 +12,11 @@ function lastAssistantText() {
     return bubbles.length ? bubbles[bubbles.length - 1].dataset.assistantMessage : ''
 }
 
-export function assistantWidget(config) {
+export function assistantWidget(config = {}) {
     return {
         open: Boolean(config.open),
         listening: false,
-        supported: assistantWidget.supportsRecognition(),
+        supported: Boolean(Recognition) && Boolean(window.SpeechSynthesisUtterance),
         voiceReply: false,
         speech: '',
         interim: '',
@@ -157,5 +157,3 @@ export function assistantWidget(config) {
         },
     }
 }
-
-assistantWidget.supportsRecognition = () => Boolean(Recognition) && Boolean(window.SpeechSynthesisUtterance)
